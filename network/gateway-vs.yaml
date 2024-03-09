@@ -1,0 +1,108 @@
+
+--- 
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: general-gateway
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/instance: ingressgateway
+    #app: ingressgateway
+    istio: ingressgateway
+    app: istio-ingressgateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - '*'
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+    # Upgrade HTTP to HTTPS
+    tls:
+      httpsRedirect: true
+  - hosts:
+    - '*'
+    port:
+      name: https
+      number: 443
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: gateway-certs 
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  labels:
+  name: airflow-vs
+  namespace: airflow
+spec:
+  gateways:
+  - istio-system/general-gateway
+  hosts:
+  - 'airflow.demo.fredgentech.com'
+  http:
+  - retries:
+      attempts: 3
+      perTryTimeout: 2s
+    match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: airflow-webserver
+        port:
+          number: 8080
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  labels:
+  name: minio-vs
+  namespace: minio
+spec:
+  gateways:
+  - istio-system/general-gateway
+  hosts:
+  - 'minio.demo.fredgentech.com'
+  http:
+  - retries:
+      attempts: 3
+      perTryTimeout: 2s
+    match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: minio
+        port:
+          number: 9001
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  labels:
+  name: spark-vs
+  namespace: spark
+spec:
+  gateways:
+  - istio-system/general-gateway
+  hosts:
+  - 'spark.demo.fredgentech.com'
+  http:
+  - retries:
+      attempts: 3
+      perTryTimeout: 2s
+    match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: spark-master-svc
+        port:
+          number: 80
