@@ -1,0 +1,12 @@
+psycopg2-binary
+boto3
+configparser
+minio
+great-expectations
+DateTime
+regex
+apache-airflow[amazon]
+apache-airflow-providers-apache-hdfs
+apache-airflow-providers-apache-spark[cncf.kubernetes]
+pyspark
+apache-airflow-providers-apache-livy
